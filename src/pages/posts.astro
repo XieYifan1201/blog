@@ -14,46 +14,44 @@ const posts = (await getCollection('blog')).sort(
     <nav>
         <a href="/" class="logo"><img src="/favicon.jpeg" alt="Logo" class="logo-img" /></a>
         <div class="nav-links">
-            <a href="/" class="active">首页</a>
-            <a href="/posts">文章</a>
+            <a href="/">首页</a>
+            <a href="/posts" class="active">文章</a>
             <a href="/about">关于</a>
         </div>
     </nav>
 
     <main>
-        <section id="hero">
-            <h1>你好，我是 <span class="gradient-text">1FanX</span></h1>
-            <p class="subtitle">
-                在这里分享关于 <strong>技术分享</strong>、<strong>设计思维</strong> 以及 <strong>生活随笔</strong>。
-                追求代码的优雅，也热爱生活的细腻。
-            </p>
-
-            <div id="actions">
-                <a class="button primary" href="/posts">浏览文章</a>
-                <a class="button secondary" href="https://github.com/XieYifan1201">Github</a>
-            </div>
+        <section id="posts-hero">
+            <h1>全部<span class="gradient-text">文章</span></h1>
+            <p class="subtitle">记录技术探索与思考的过程</p>
         </section>
 
-        {posts.length > 0 && (
-        <section id="posts-section">
-            <h2 class="section-title">最新文章</h2>
-            <div class="posts-grid">
-                {posts.map((post) => (
-                    <a href={`/posts/${post.id}`} class="post-card">
-                        <div class="post-meta">
-                            <time>{post.data.date.toLocaleDateString('zh-CN')}</time>
-                            {post.data.tags.map((tag) => (
-                                <span class="tag">{tag}</span>
-                            ))}
-                        </div>
-                        <h3>{post.data.title}</h3>
-                        <p>{post.data.description}</p>
-                        <span class="read-more">阅读全文 →</span>
-                    </a>
-                ))}
-            </div>
-        </section>
+        {posts.length > 0 ? (
+        <div class="posts-grid">
+            {posts.map((post) => (
+                <a href={`/posts/${post.id}`} class="post-card">
+                    <div class="post-meta">
+                        <time>{post.data.date.toLocaleDateString('zh-CN')}</time>
+                        {post.data.tags.map((tag) => (
+                            <span class="tag">{tag}</span>
+                        ))}
+                    </div>
+                    <h3>{post.data.title}</h3>
+                    <p>{post.data.description}</p>
+                    <span class="read-more">阅读全文 →</span>
+                </a>
+            ))}
+        </div>
+        ) : (
+        <div class="empty">
+            <p>暂无文章，敬请期待。</p>
+            <a href="/" class="button primary">返回首页</a>
+        </div>
         )}
+
+        <footer class="page-footer">
+            <a href="/" class="button primary">返回首页</a>
+        </footer>
     </main>
 </div>
 </Layout>
@@ -81,6 +79,7 @@ const posts = (await getCollection('blog')).sort(
     }
 
     #container {
+        min-height: 100vh;
         display: flex;
         flex-direction: column;
         position: relative;
@@ -141,25 +140,21 @@ const posts = (await getCollection('blog')).sort(
         display: flex;
         flex-direction: column;
         align-items: center;
+        padding: 2rem 1rem 4rem;
     }
 
-    #hero {
-        min-height: 80vh;
-        max-width: 880px;
+    #posts-hero {
         text-align: center;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 0 1rem;
+        max-width: 700px;
         animation: fadeInUp 0.8s ease-out;
+        margin-bottom: 3rem;
     }
 
     h1 {
         font-size: clamp(2.5rem, 8vw, 4.5rem);
         font-weight: 800;
         line-height: 1.1;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
 
     .gradient-text {
@@ -170,64 +165,17 @@ const posts = (await getCollection('blog')).sort(
     }
 
     .subtitle {
-        font-size: 1.2rem;
+        font-size: 1.15rem;
         color: var(--text-muted);
-        line-height: 1.6;
-        margin-bottom: 2.5rem;
-    }
-
-    #actions {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-    }
-
-    .button {
-        padding: 0.8rem 2rem;
-        border-radius: 12px;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.3s;
-    }
-
-    .button.primary {
-        background: var(--text-main);
-        color: var(--bg-color);
-    }
-
-    .button.primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
-    }
-
-    .button.secondary {
-        border: 1px solid #333;
-        color: var(--text-main);
-    }
-
-    .button.secondary:hover {
-        background: rgba(255,255,255,0.05);
-        border-color: #555;
-    }
-
-    #posts-section {
-        width: 100%;
-        max-width: 900px;
-        padding: 3rem 1rem 6rem;
-        animation: fadeInUp 0.8s ease-out 0.15s both;
-    }
-
-    .section-title {
-        text-align: center;
-        font-size: 2rem;
-        font-weight: 800;
-        margin-bottom: 2.5rem;
     }
 
     .posts-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 1.5rem;
+        max-width: 900px;
+        width: 100%;
+        animation: fadeInUp 0.8s ease-out 0.15s both;
     }
 
     .post-card {
@@ -297,6 +245,40 @@ const posts = (await getCollection('blog')).sort(
         color: #a78bfa;
     }
 
+    .empty {
+        text-align: center;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .empty p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+
+    .button {
+        padding: 0.8rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .button.primary {
+        background: var(--text-main);
+        color: var(--bg-color);
+    }
+
+    .button.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+    }
+
+    .page-footer {
+        margin-top: 3rem;
+        text-align: center;
+    }
+
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -311,8 +293,6 @@ const posts = (await getCollection('blog')).sort(
     @media (max-width: 768px) {
         nav { padding: 1.5rem 5%; }
         h1 { font-size: 2.5rem; }
-        #actions { flex-direction: column; width: 100%; }
-        .button { width: 100%; }
         .posts-grid { grid-template-columns: 1fr; }
     }
 </style>

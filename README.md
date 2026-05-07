@@ -1,46 +1,63 @@
-# Astro Starter Kit: Basics
+# 1FanX 的博客
 
-```sh
-npm create astro@latest -- --template basics
+基于 [Astro](https://astro.build) 构建的个人博客站点，深色主题，简洁优雅。
+
+## 功能
+
+- � 博客文章 — 基于 Content Collections 管理，Markdown 编写
+- � 关于页面 — 个人介绍、荣誉展示、证书瀑布流（点击放大查看）
+- 🌙 深色主题 — 玻璃拟态导航栏、渐变光晕背景
+- 📱 响应式 — 适配桌面端与移动端
+- ⚡ 静态生成 — 零 JavaScript，加载极快
+
+## 项目结构
+
 ```
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
 /
 ├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
+│   ├── certificates/       # 证书图片
+│   └── favicon.jpeg        # 站点图标
+├── src/
+│   ├── content/
+│   │   └── blog/           # 博客文章（Markdown）
+│   ├── layouts/
+│   │   └── Layout.astro    # 全局布局
+│   └── pages/
+│       ├── index.astro     # 首页
+│       ├── about.astro     # 关于页
+│       ├── posts.astro     # 文章列表页
+│       └── posts/
+│           └── [slug].astro # 文章详情页
+├── content.config.ts       # Content Collections 配置
+├── astro.config.mjs        # Astro 配置
 └── package.json
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## 本地开发
 
-## 🧞 Commands
+```bash
+# 安装依赖
+npm install
 
-All commands are run from the root of the project, from a terminal:
+# 启动开发服务器
+npm run dev
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+# 构建生产版本
+npm run build
 
-## 👀 Want to learn more?
+# 本地预览构建结果
+npm run preview
+```
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## 部署
+
+项目为纯静态站点，构建产物在 `dist/` 目录，支持部署到任意静态托管平台：
+
+- **Cloudflare Pages** — 连接 GitHub 仓库，构建命令 `npm run build`，输出目录 `dist`
+- **Vercel / Netlify** — 同上，零配置即可部署
+
+## 技术栈
+
+- [Astro 6](https://astro.build) — 静态站点生成器
+- Markdown + Content Collections — 内容管理
+- 纯 CSS — 无框架依赖，手写样式
