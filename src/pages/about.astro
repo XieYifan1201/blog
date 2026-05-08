@@ -180,14 +180,106 @@ function openLightbox(src) {
     img.src = src;
     lb.classList.add('active');
     document.body.style.overflow = 'hidden';
+    resetZoom();
 }
 function closeLightbox() {
     const lb = document.getElementById('lightbox');
     lb.classList.remove('active');
     document.body.style.overflow = '';
+    resetZoom();
 }
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeLightbox();
+});
+
+let scale = 1;
+let panning = false;
+let startX = 0, startY = 0;
+let translateX = 0, translateY = 0;
+let initialPinchDist = 0;
+let initialScale = 1;
+
+function resetZoom() {
+    scale = 1;
+    translateX = 0;
+    translateY = 0;
+    applyTransform();
+}
+
+function applyTransform() {
+    const img = document.getElementById('lightbox-img');
+    if (img) {
+        img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        img.style.transition = scale === 1 ? 'transform 0.3s ease' : 'none';
+        img.style.cursor = scale > 1 ? 'grab' : 'zoom-out';
+    }
+}
+
+const lb = document.getElementById('lightbox');
+const lbImg = document.getElementById('lightbox-img');
+
+lb.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    scale = Math.min(Math.max(1, scale + delta), 5);
+    if (scale === 1) { translateX = 0; translateY = 0; }
+    applyTransform();
+}, { passive: false });
+
+lb.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+        initialPinchDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialScale = scale;
+    } else if (e.touches.length === 1 && scale > 1) {
+        panning = true;
+        startX = e.touches[0].clientX - translateX;
+        startY = e.touches[0].clientY - translateY;
+        lbImg.style.cursor = 'grabbing';
+    }
+}, { passive: true });
+
+lb.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+        const dist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
+        scale = Math.min(Math.max(1, initialScale * (dist / initialPinchDist)), 5);
+        if (scale === 1) { translateX = 0; translateY = 0; }
+        applyTransform();
+    } else if (panning && e.touches.length === 1) {
+        translateX = e.touches[0].clientX - startX;
+        translateY = e.touches[0].clientY - startY;
+        applyTransform();
+    }
+}, { passive: true });
+
+lb.addEventListener('touchend', () => { panning = false; });
+
+lbImg.addEventListener('mousedown', (e) => {
+    if (scale > 1) {
+        panning = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        lbImg.style.cursor = 'grabbing';
+        e.preventDefault();
+    }
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (panning) {
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        applyTransform();
+    }
+});
+
+document.addEventListener('mouseup', () => {
+    panning = false;
+    if (lbImg) lbImg.style.cursor = scale > 1 ? 'grab' : 'zoom-out';
 });
 </script>
 
@@ -223,12 +315,12 @@ document.addEventListener('keydown', (e) => {
 
     .spotlight {
         position: fixed;
-        top: -20%;
+        top: -30%;
         left: 50%;
         transform: translateX(-50%);
-        width: 80vw;
-        height: 60vh;
-        background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, rgba(0,0,0,0) 70%);
+        width: 150vw;
+        height: 150vh;
+        background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.12) 0%, rgba(124, 58, 237, 0.03) 50%, rgba(0, 0, 0, 0) 80%);
         z-index: -1;
         pointer-events: none;
     }
@@ -463,12 +555,6 @@ document.addEventListener('keydown', (e) => {
         border-color: rgba(124, 58, 237, 0.4);
         transform: translateY(-3px);
         box-shadow: 0 12px 40px rgba(124, 58, 237, 0.1);
-    }
-
-    .cert-card img {
-        width: 100%;
-        height: auto;
-        display: block;
     }
 
     .cert-name {

@@ -28,7 +28,9 @@ const { Content } = await render(post);
     </nav>
 
     <main>
-        <a href="/posts" class="back-link" onclick="history.back(); return false;">← 返回</a>
+        <div class="back-link-wrapper">
+            <a href="/posts" class="back-link" onclick="history.back(); return false;">← 返回</a>
+        </div>
         <header class="post-header">
             <h1>{post.data.title}</h1>
             <p class="description">{post.data.description}</p>
@@ -81,12 +83,12 @@ const { Content } = await render(post);
 
     .spotlight {
         position: fixed;
-        top: -20%;
+        top: -30%;
         left: 50%;
         transform: translateX(-50%);
-        width: 80vw;
-        height: 60vh;
-        background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, rgba(0,0,0,0) 70%);
+        width: 150vw;
+        height: 150vh;
+        background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.12) 0%, rgba(124, 58, 237, 0.03) 50%, rgba(0, 0, 0, 0) 80%);
         z-index: -1;
         pointer-events: none;
     }
@@ -144,13 +146,11 @@ const { Content } = await render(post);
         width: 100%;
     }
 
-    #post-detail {
+    .back-link-wrapper {
         width: 100%;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 24px;
-        padding: 3rem;
-        backdrop-filter: blur(10px);
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         animation: fadeInUp 0.8s ease-out;
     }
 
@@ -160,9 +160,7 @@ const { Content } = await render(post);
         font-size: 0.9rem;
         font-weight: 600;
         display: inline-block;
-        margin-bottom: 1.5rem;
         transition: color 0.3s;
-        align-self: flex-start;
     }
 
     .back-link:hover {
@@ -173,6 +171,17 @@ const { Content } = await render(post);
         margin-bottom: 2rem;
         text-align: left;
         width: 100%;
+        animation: fadeInUp 0.8s ease-out 0.15s both;
+    }
+
+    #post-detail {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        padding: 3rem;
+        backdrop-filter: blur(10px);
+        animation: fadeInUp 0.8s ease-out 0.3s both;
     }
 
     .post-meta {
