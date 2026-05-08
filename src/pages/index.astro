@@ -7,9 +7,12 @@ const posts = (await getCollection('blog')).sort(
 );
 ---
 
-<Layout title="1FanX的博客" description="1FanX 的个人博客 — 分享技术、设计与生活随笔">
+<Layout title="XIE YIFAN 的博客" description="XIE YIFAN 的个人博客 — 分享技术、设计与生活随笔">
 <div id="container">
     <div class="spotlight"></div>
+    <div class="background-waves">
+        <img src="/background.svg" alt="" class="wave-bg" />
+    </div>
 
     <nav>
         <a href="/" class="logo"><img src="/favicon.jpeg" alt="Logo" class="logo-img" /></a>
@@ -22,7 +25,7 @@ const posts = (await getCollection('blog')).sort(
 
     <main>
         <section id="hero">
-            <h1>你好，我是 <span class="gradient-text">1FanX</span></h1>
+            <h1>你好，我是 <span class="gradient-text">XIE YIFAN</span></h1>
             <p class="subtitle">
                 在这里分享关于 <strong>技术分享</strong>、<strong>设计思维</strong> 以及 <strong>生活随笔</strong>。
                 追求代码的优雅，也热爱生活的细腻。
@@ -96,6 +99,22 @@ const posts = (await getCollection('blog')).sort(
         background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, rgba(0,0,0,0) 70%);
         z-index: -1;
         pointer-events: none;
+    }
+
+    .background-waves {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: auto;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    .wave-bg {
+        width: 100%;
+        height: auto;
+        opacity: 0.6;
     }
 
     nav {
