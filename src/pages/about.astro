@@ -412,13 +412,14 @@ document.addEventListener('keydown', (e) => {
     }
 
     .cert-masonry {
-        columns: 2;
-        column-gap: 1.2rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.2rem;
     }
 
     .cert-card {
-        break-inside: avoid;
-        margin-bottom: 1.2rem;
+        flex: 0 0 calc(50% - 0.6rem);
+        max-width: calc(50% - 0.6rem);
         border-radius: 16px;
         overflow: hidden;
         background: rgba(255, 255, 255, 0.03);
@@ -547,7 +548,7 @@ document.addEventListener('keydown', (e) => {
         h1 { font-size: 2.5rem; }
         #details { grid-template-columns: 1fr; }
         .awards-grid { grid-template-columns: 1fr; }
-        .cert-masonry { columns: 1; }
+        .cert-card { flex: 0 0 100%; max-width: 100%; }
         #contact { flex-direction: column; width: 100%; }
         .button { width: 100%; text-align: center; }
     }
