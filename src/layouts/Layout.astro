@@ -39,10 +39,10 @@ const fullImage = new URL(image, Astro.site).href;
 		<meta name="twitter:image" content={fullImage} />
 	</head>
 	<body>
+		<slot />
 		<div class="bg-waves">
 			<img src="/background.svg" alt="" class="bg-wave-img" />
 		</div>
-		<slot />
 	</body>
 </html>
 
@@ -64,13 +64,19 @@ const fullImage = new URL(image, Astro.site).href;
 		bottom: 0;
 		left: 0;
 		width: 100%;
-		z-index: -1;
+		height: 100%;
+		z-index: 0;
 		pointer-events: none;
+		overflow: hidden;
 	}
 
 	.bg-wave-img {
+		position: absolute;
+		bottom: 0;
+		left: 0;
 		width: 100%;
-		height: auto;
+		height: 100%;
+		object-fit: cover;
 		opacity: 0.5;
 	}
 </style>

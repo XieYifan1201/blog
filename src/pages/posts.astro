@@ -83,6 +83,7 @@ const posts = (await getCollection('blog')).sort(
         display: flex;
         flex-direction: column;
         position: relative;
+        z-index: 1;
     }
 
     .spotlight {
@@ -104,9 +105,13 @@ const posts = (await getCollection('blog')).sort(
         padding: 2rem 10%;
         position: sticky;
         top: 0;
+        left: 0;
+        right: 0;
         z-index: 100;
-        background: rgba(10, 10, 10, 0.8);
+        background: rgba(10, 10, 10, 0.9);
         backdrop-filter: blur(12px);
+        margin: 0;
+        border-bottom: none;
     }
 
     .logo {

@@ -28,20 +28,18 @@ const { Content } = await render(post);
     </nav>
 
     <main>
+        <a href="/posts" class="back-link" onclick="history.back(); return false;">← 返回</a>
+        <header class="post-header">
+            <h1>{post.data.title}</h1>
+            <p class="description">{post.data.description}</p>
+            <div class="post-meta">
+                <time>{post.data.date.toLocaleDateString('zh-CN')}</time>
+                {post.data.tags.map((tag) => (
+                    <span class="tag">{tag}</span>
+                ))}
+            </div>
+        </header>
         <article id="post-detail">
-            <a href="/posts" class="back-link" onclick="history.back(); return false;">← 返回</a>
-
-            <header class="post-header">
-                <div class="post-meta">
-                    <time>{post.data.date.toLocaleDateString('zh-CN')}</time>
-                    {post.data.tags.map((tag) => (
-                        <span class="tag">{tag}</span>
-                    ))}
-                </div>
-                <h1>{post.data.title}</h1>
-                <p class="description">{post.data.description}</p>
-            </header>
-
             <div class="post-content">
                 <Content />
             </div>
@@ -78,6 +76,7 @@ const { Content } = await render(post);
         display: flex;
         flex-direction: column;
         position: relative;
+        z-index: 1;
     }
 
     .spotlight {
@@ -99,9 +98,13 @@ const { Content } = await render(post);
         padding: 2rem 10%;
         position: sticky;
         top: 0;
+        left: 0;
+        right: 0;
         z-index: 100;
-        background: rgba(10, 10, 10, 0.8);
+        background: rgba(10, 10, 10, 0.9);
         backdrop-filter: blur(12px);
+        margin: 0;
+        border-bottom: none;
     }
 
     .logo {
@@ -133,12 +136,15 @@ const { Content } = await render(post);
     main {
         flex: 1;
         display: flex;
-        justify-content: center;
-        padding: 4rem 1rem 4rem;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem 1rem 4rem;
+        max-width: 900px;
+        margin: 0 auto;
+        width: 100%;
     }
 
     #post-detail {
-        max-width: 720px;
         width: 100%;
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.08);
@@ -154,8 +160,9 @@ const { Content } = await render(post);
         font-size: 0.9rem;
         font-weight: 600;
         display: inline-block;
-        margin-bottom: 2.5rem;
+        margin-bottom: 1.5rem;
         transition: color 0.3s;
+        align-self: flex-start;
     }
 
     .back-link:hover {
@@ -163,14 +170,16 @@ const { Content } = await render(post);
     }
 
     .post-header {
-        margin-bottom: 3rem;
+        margin-bottom: 2rem;
+        text-align: left;
+        width: 100%;
     }
 
     .post-meta {
         display: flex;
         align-items: center;
         gap: 0.6rem;
-        margin-bottom: 1rem;
+        margin-top: 1.5rem;
         flex-wrap: wrap;
     }
 
