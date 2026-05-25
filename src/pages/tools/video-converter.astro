@@ -1,0 +1,596 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="视频格式转换 - XIE YIFAN" description="在线视频格式转换工具，支持多种视频格式">
+<div id="container">
+    <div class="spotlight"></div>
+
+    <nav>
+        <a href="/" class="logo"><img src="/favicon.jpeg" alt="Logo" class="logo-img" /></a>
+        <div class="nav-links">
+            <a href="/">首页</a>
+            <a href="/posts">文章</a>
+            <a href="/projects">项目</a>
+            <a href="/tools" class="active">工具</a>
+            <a href="/about">关于</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="back-link-wrapper">
+            <a href="/tools" class="back-link">← 返回工具列表</a>
+        </div>
+
+        <section id="tool-hero">
+            <h1>视频<span class="gradient-text">格式转换</span></h1>
+            <p class="subtitle">上传单个或多个视频，浏览器端离线转换为其他格式</p>
+        </section>
+
+        <div class="tool-container">
+            <div class="upload-area" id="upload-area">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p>点击或拖拽视频到此处</p>
+                <span class="upload-hint">支持 MP4、WEBM、AVI、MOV、MKV、FLV、WMV，可多选</span>
+                <input type="file" id="file-input" accept="video/*" multiple hidden />
+            </div>
+
+            <div class="convert-options" id="convert-options" style="display: none;">
+                <div class="file-list" id="file-list"></div>
+
+                <div class="format-selector">
+                    <label for="target-format">目标格式：</label>
+                    <select id="target-format">
+                        <option value="mp4">MP4</option>
+                        <option value="webm">WEBM</option>
+                        <option value="avi">AVI</option>
+                        <option value="mov">MOV</option>
+                        <option value="mkv">MKV</option>
+                        <option value="gif">GIF</option>
+                        <option value="mp3">MP3（仅音频）</option>
+                        <option value="wav">WAV（仅音频）</option>
+                    </select>
+                </div>
+
+                <button class="convert-btn" id="convert-btn" onclick="convertVideos()">转换并下载</button>
+
+                <div class="progress-container" id="progress-container" style="display: none;">
+                    <div class="progress-bar" id="progress-bar"></div>
+                    <span class="progress-text" id="progress-text">0%</span>
+                </div>
+
+                <div class="status-text" id="status-text"></div>
+            </div>
+        </div>
+
+        <footer class="page-footer">
+            <a href="/tools" class="button primary">返回工具列表</a>
+        </footer>
+    </main>
+</div>
+
+<script is:inline>
+let uploadedFiles = [];
+let isConverting = false;
+
+const uploadArea = document.getElementById('upload-area');
+const fileInput = document.getElementById('file-input');
+const convertOptions = document.getElementById('convert-options');
+const fileList = document.getElementById('file-list');
+const progressContainer = document.getElementById('progress-container');
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-text');
+const statusText = document.getElementById('status-text');
+
+uploadArea.addEventListener('click', () => fileInput.click());
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('drag-over');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('drag-over');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+    handleFiles(e.dataTransfer.files);
+});
+
+fileInput.addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+});
+
+function handleFiles(files) {
+    for (const file of files) {
+        if (file.type.startsWith('video/')) {
+            uploadedFiles.push(file);
+        }
+    }
+    updateFileList();
+}
+
+function updateFileList() {
+    if (uploadedFiles.length === 0) {
+        convertOptions.style.display = 'none';
+        return;
+    }
+
+    convertOptions.style.display = 'block';
+    fileList.innerHTML = uploadedFiles.map((file, i) => `
+        <div class="file-item">
+            <span class="file-name">${file.name}</span>
+            <span class="file-size">${formatSize(file.size)}</span>
+            <button class="remove-btn" onclick="removeFile(${i})">✕</button>
+        </div>
+    `).join('');
+}
+
+function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function removeFile(index) {
+    if (isConverting) return;
+    uploadedFiles.splice(index, 1);
+    updateFileList();
+}
+
+async function convertVideos() {
+    if (isConverting) return;
+    isConverting = true;
+
+    const format = document.getElementById('target-format').value;
+    const convertBtn = document.getElementById('convert-btn');
+    convertBtn.disabled = true;
+    convertBtn.textContent = '转换中...';
+
+    progressContainer.style.display = 'block';
+    statusText.textContent = '正在加载 FFmpeg...';
+
+    try {
+        const { FFmpeg } = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.15/+esm');
+        const { fetchFile } = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/+esm');
+
+        const ffmpeg = new FFmpeg();
+
+        ffmpeg.on('log', ({ message }) => {
+            statusText.textContent = message;
+        });
+
+        ffmpeg.on('progress', ({ progress, time }) => {
+            const percent = Math.round(progress * 100);
+            progressBar.style.width = percent + '%';
+            progressText.textContent = percent + '%';
+        });
+
+        const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd';
+        await ffmpeg.load({
+            coreURL: baseURL + '/ffmpeg-core.js',
+            wasmURL: baseURL + '/ffmpeg-core.wasm',
+        });
+
+        statusText.textContent = '开始转换...';
+
+        for (let i = 0; i < uploadedFiles.length; i++) {
+            const file = uploadedFiles[i];
+            const inputName = 'input_' + i + '_' + file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+            const outputName = 'output_' + i + '.' + format;
+
+            await ffmpeg.writeFile(inputName, await fetchFile(file));
+
+            const isAudioOnly = format === 'mp3' || format === 'wav';
+            const args = ['-i', inputName];
+
+            if (isAudioOnly) {
+                args.push('-vn');
+                if (format === 'mp3') {
+                    args.push('-codec:a', 'libmp3lame', '-q:a', '2');
+                } else {
+                    args.push('-codec:a', 'pcm_s16le');
+                }
+            } else if (format === 'gif') {
+                args.push('-vf', 'fps=10,scale=480:-1:flags=lanczos', '-loop', '0');
+            } else if (format === 'webm') {
+                args.push('-c:v', 'libvpx-vp9', '-c:a', 'libopus');
+            } else if (format === 'mp4') {
+                args.push('-c:v', 'libx264', '-c:a', 'aac', '-preset', 'ultrafast');
+            }
+
+            args.push(outputName);
+
+            await ffmpeg.exec(args);
+
+            const data = await ffmpeg.readFile(outputName);
+            const blob = new Blob([data.buffer], { type: getMimeType(format) });
+            downloadBlob(blob, file.name.replace(/\.[^.]+$/, '') + '.' + format);
+
+            await ffmpeg.deleteFile(inputName);
+            await ffmpeg.deleteFile(outputName);
+
+            progressBar.style.width = Math.round(((i + 1) / uploadedFiles.length) * 100) + '%';
+            progressText.textContent = Math.round(((i + 1) / uploadedFiles.length) * 100) + '%';
+        }
+
+        statusText.textContent = '转换完成！';
+    } catch (error) {
+        statusText.textContent = '转换失败：' + error.message;
+        console.error(error);
+    } finally {
+        isConverting = false;
+        convertBtn.disabled = false;
+        convertBtn.textContent = '转换并下载';
+    }
+}
+
+function getMimeType(format) {
+    const map = {
+        'mp4': 'video/mp4',
+        'webm': 'video/webm',
+        'avi': 'video/x-msvideo',
+        'mov': 'video/quicktime',
+        'mkv': 'video/x-matroska',
+        'gif': 'image/gif',
+        'mp3': 'audio/mpeg',
+        'wav': 'audio/wav',
+    };
+    return map[format] || 'video/mp4';
+}
+
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+</script>
+
+<style>
+    :root {
+        --accent: #7c3aed;
+        --accent-gradient: linear-gradient(45deg, #7c3aed, #ff1fb1);
+        --bg-color: #0a0a0a;
+        --text-main: #ffffff;
+        --text-muted: #a1a1aa;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        color: var(--text-main);
+        font-family: 'Inter', 'SF Pro Display', system-ui, sans-serif;
+        overflow-x: hidden;
+    }
+
+    #container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        z-index: 1;
+    }
+
+    .spotlight {
+        position: fixed;
+        top: -30%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 150vw;
+        height: 150vh;
+        background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.12) 0%, rgba(124, 58, 237, 0.03) 50%, rgba(0, 0, 0, 0) 80%);
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 2rem 10%;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .logo-img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .nav-links a {
+        color: var(--text-muted);
+        text-decoration: none;
+        margin-left: 2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+        color: var(--text-main);
+    }
+
+    main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem 1rem 4rem;
+        max-width: 800px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .back-link-wrapper {
+        width: 100%;
+        padding-bottom: 1.5rem;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .back-link {
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+        transition: color 0.3s;
+    }
+
+    .back-link:hover {
+        color: #a78bfa;
+    }
+
+    #tool-hero {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeInUp 0.8s ease-out 0.1s both;
+    }
+
+    #tool-hero h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+
+    .gradient-text {
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .subtitle {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+    }
+
+    .tool-container {
+        width: 100%;
+        animation: fadeInUp 0.8s ease-out 0.2s both;
+    }
+
+    .upload-area {
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px dashed rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .upload-area:hover,
+    .upload-area.drag-over {
+        border-color: var(--accent);
+        background: rgba(124, 58, 237, 0.05);
+    }
+
+    .upload-area svg {
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .upload-area p {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-hint {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .convert-options {
+        margin-top: 2rem;
+    }
+
+    .file-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .file-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 1rem 1.2rem;
+    }
+
+    .file-name {
+        flex: 1;
+        font-size: 0.95rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .file-size {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .remove-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 0.2rem;
+        transition: color 0.2s;
+    }
+
+    .remove-btn:hover {
+        color: #ff4d4d;
+    }
+
+    .format-selector {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .format-selector label {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+    }
+
+    .format-selector select {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        color: var(--text-main);
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+
+    .format-selector select:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+
+    .progress-container {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        height: 24px;
+        position: relative;
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: var(--accent-gradient);
+        width: 0%;
+        transition: width 0.3s;
+        border-radius: 8px;
+    }
+
+    .progress-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .status-text {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+        word-break: break-all;
+    }
+
+    .convert-btn {
+        width: 100%;
+        padding: 1rem;
+        background: var(--accent);
+        border: none;
+        border-radius: 12px;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 1.5rem;
+    }
+
+    .convert-btn:hover:not(:disabled) {
+        background: #6d28d9;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+    }
+
+    .convert-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .page-footer {
+        margin-top: 4rem;
+        text-align: center;
+        animation: fadeInUp 0.8s ease-out 0.4s both;
+    }
+
+    .button {
+        padding: 0.8rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .button.primary {
+        background: var(--text-main);
+        color: var(--bg-color);
+    }
+
+    .button.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 768px) {
+        nav { padding: 1.5rem 5%; }
+        #tool-hero h1 { font-size: 2rem; }
+        .upload-area { padding: 2rem 1.5rem; }
+    }
+</style>
+</Layout>

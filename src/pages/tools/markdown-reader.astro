@@ -1,0 +1,538 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import '../../styles/markdown.css';
+---
+
+<Layout title="Markdown 阅读器 - XIE YIFAN" description="上传并预览 Markdown 文档">
+<div id="container">
+    <div class="spotlight"></div>
+
+    <nav>
+        <a href="/" class="logo"><img src="/favicon.jpeg" alt="Logo" class="logo-img" /></a>
+        <div class="nav-links">
+            <a href="/">首页</a>
+            <a href="/posts">文章</a>
+            <a href="/projects">项目</a>
+            <a href="/tools" class="active">工具</a>
+            <a href="/about">关于</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="back-link-wrapper">
+            <a href="/tools" class="back-link">← 返回工具列表</a>
+        </div>
+
+        <section id="tool-hero">
+            <h1>Markdown<span class="gradient-text">阅读器</span></h1>
+            <p class="subtitle">上传 Markdown 文件，即时预览渲染效果</p>
+        </section>
+
+        <div class="tool-container">
+            <div class="upload-area" id="upload-area">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <p>点击或拖拽 Markdown 文件到此处</p>
+                <span class="upload-hint">支持 .md、.markdown 文件</span>
+                <input type="file" id="file-input" accept=".md,.markdown" hidden />
+            </div>
+
+            <div class="editor-toggle" id="editor-toggle" style="display: none;">
+                <button class="toggle-btn active" data-mode="preview" onclick="switchMode('preview')">预览</button>
+                <button class="toggle-btn" data-mode="source" onclick="switchMode('source')">源码</button>
+            </div>
+
+            <div class="preview-container" id="preview-container" style="display: none;">
+                <div class="md-rendered" id="md-preview"></div>
+            </div>
+
+            <div class="source-container" id="source-container" style="display: none;">
+                <textarea id="source-text" oninput="autoResize(this); updatePreview()"></textarea>
+            </div>
+        </div>
+
+        <footer class="page-footer">
+            <a href="/tools" class="button primary">返回工具列表</a>
+        </footer>
+    </main>
+</div>
+
+<script is:inline>
+const uploadArea = document.getElementById('upload-area');
+const fileInput = document.getElementById('file-input');
+const editorToggle = document.getElementById('editor-toggle');
+const previewContainer = document.getElementById('preview-container');
+const sourceContainer = document.getElementById('source-container');
+const mdPreview = document.getElementById('md-preview');
+const sourceText = document.getElementById('source-text');
+
+let currentMode = 'preview';
+
+uploadArea.addEventListener('click', () => fileInput.click());
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('drag-over');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('drag-over');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) handleFile(e.target.files[0]);
+});
+
+function handleFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const content = e.target.result;
+        sourceText.value = content;
+        mdPreview.innerHTML = renderMarkdown(content);
+        uploadArea.style.display = 'none';
+        editorToggle.style.display = 'flex';
+        switchMode('preview');
+    };
+    reader.readAsText(file);
+}
+
+function switchMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+    previewContainer.style.display = mode === 'preview' ? 'block' : 'none';
+    sourceContainer.style.display = mode === 'source' ? 'block' : 'none';
+    if (mode === 'source') {
+        const textarea = document.getElementById('source-text');
+        autoResize(textarea);
+    }
+}
+
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+function updatePreview() {
+    const content = sourceText.value;
+    mdPreview.innerHTML = renderMarkdown(content);
+}
+
+function renderMarkdown(md) {
+    const lines = md.split('\n');
+    let html = '';
+    let inCodeBlock = false;
+    let codeContent = '';
+    let codeLang = '';
+    let inList = false;
+    let listType = '';
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        if (line.startsWith('```')) {
+            if (inCodeBlock) {
+                html += `<pre><code class="language-${codeLang}">${escapeHtml(codeContent.trim())}</code></pre>`;
+                codeContent = '';
+                codeLang = '';
+                inCodeBlock = false;
+            } else {
+                if (inList) { html += `</${listType}>`; inList = false; }
+                inCodeBlock = true;
+                codeLang = line.slice(3).trim();
+            }
+            continue;
+        }
+
+        if (inCodeBlock) {
+            codeContent += line + '\n';
+            continue;
+        }
+
+        if (line.match(/^#{1,6}\s/)) {
+            if (inList) { html += `</${listType}>`; inList = false; }
+            const level = line.match(/^(#+)/)[1].length;
+            const text = line.replace(/^#+\s/, '');
+            html += `<h${level}>${text}</h${level}>`;
+            continue;
+        }
+
+        if (line.match(/^\s*[-*]\s/)) {
+            if (!inList || listType !== 'ul') {
+                if (inList) html += `</${listType}>`;
+                html += '<ul>';
+                inList = true;
+                listType = 'ul';
+            }
+            const text = line.replace(/^\s*[-*]\s/, '');
+            html += `<li>${renderInline(text)}</li>`;
+            continue;
+        }
+
+        if (line.match(/^\s*\d+\.\s/)) {
+            if (!inList || listType !== 'ol') {
+                if (inList) html += `</${listType}>`;
+                html += '<ol>';
+                inList = true;
+                listType = 'ol';
+            }
+            const text = line.replace(/^\s*\d+\.\s/, '');
+            html += `<li>${renderInline(text)}</li>`;
+            continue;
+        }
+
+        if (inList) { html += `</${listType}>`; inList = false; }
+
+        if (line.startsWith('> ')) {
+            html += `<blockquote>${renderInline(line.slice(2))}</blockquote>`;
+            continue;
+        }
+
+        if (line.match(/^---$/)) {
+            html += '<hr>';
+            continue;
+        }
+
+        if (line.trim() === '') {
+            continue;
+        }
+
+        if (line.match(/^\|(.+)\|$/)) {
+            const tableLines = [];
+            while (i < lines.length && lines[i].match(/^\|(.+)\|$/)) {
+                tableLines.push(lines[i]);
+                i++;
+            }
+            if (tableLines.length > 0) {
+                html += '<table>';
+                let isHeader = true;
+                for (const tLine of tableLines) {
+                    const cells = tLine.slice(1, -1).split('|').map(c => c.trim());
+                    if (cells.every(c => /^[-:]+$/.test(c))) {
+                        isHeader = false;
+                        continue;
+                    }
+                    const tag = isHeader ? 'th' : 'td';
+                    const row = cells.map(c => `<${tag}>${renderInline(c)}</${tag}>`).join('');
+                    html += `<tr>${row}</tr>`;
+                    isHeader = false;
+                }
+                html += '</table>';
+                i--;
+            }
+            continue;
+        }
+
+        if (line.match(/^!\[([^\]]*)\]\(([^)]+)\)/)) {
+            const match = line.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
+            html += `<img src="${match[2]}" alt="${match[1]}" loading="lazy">`;
+            continue;
+        }
+
+        html += `<p>${renderInline(line)}</p>`;
+    }
+
+    if (inList) html += `</${listType}>`;
+
+    return html;
+}
+
+function renderInline(text) {
+    text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy">');
+    text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    text = text.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
+    text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+    return text;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+
+<style>
+    :root {
+        --accent: #7c3aed;
+        --accent-gradient: linear-gradient(45deg, #7c3aed, #ff1fb1);
+        --bg-color: #0a0a0a;
+        --text-main: #ffffff;
+        --text-muted: #a1a1aa;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        color: var(--text-main);
+        font-family: 'Inter', 'SF Pro Display', system-ui, sans-serif;
+        overflow-x: hidden;
+    }
+
+    #container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        z-index: 1;
+    }
+
+    .spotlight {
+        position: fixed;
+        top: -30%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 150vw;
+        height: 150vh;
+        background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.12) 0%, rgba(124, 58, 237, 0.03) 50%, rgba(0, 0, 0, 0) 80%);
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 2rem 10%;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .logo-img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .nav-links a {
+        color: var(--text-muted);
+        text-decoration: none;
+        margin-left: 2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+        color: var(--text-main);
+    }
+
+    main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem 1rem 4rem;
+        max-width: 800px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .back-link-wrapper {
+        width: 100%;
+        padding-bottom: 1.5rem;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .back-link {
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+        transition: color 0.3s;
+    }
+
+    .back-link:hover {
+        color: #a78bfa;
+    }
+
+    #tool-hero {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeInUp 0.8s ease-out 0.1s both;
+    }
+
+    #tool-hero h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+
+    .gradient-text {
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .subtitle {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+    }
+
+    .tool-container {
+        width: 100%;
+        animation: fadeInUp 0.8s ease-out 0.2s both;
+    }
+
+    .upload-area {
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px dashed rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .upload-area:hover,
+    .upload-area.drag-over {
+        border-color: var(--accent);
+        background: rgba(124, 58, 237, 0.05);
+    }
+
+    .upload-area svg {
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .upload-area p {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-hint {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .editor-toggle {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .toggle-btn {
+        padding: 0.6rem 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .toggle-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+    }
+
+    .preview-container {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        padding: 3rem;
+        backdrop-filter: blur(10px);
+    }
+
+    .md-rendered {
+        line-height: 1.8;
+        font-size: 1.05rem;
+    }
+
+    .source-container {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        padding: 3rem;
+        backdrop-filter: blur(10px);
+    }
+
+    #source-text {
+        width: 100%;
+        min-height: 400px;
+        background: transparent;
+        border: none;
+        color: var(--text-main);
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        resize: vertical;
+    }
+
+    #source-text:focus { outline: none; }
+
+    .page-footer {
+        margin-top: 4rem;
+        text-align: center;
+        animation: fadeInUp 0.8s ease-out 0.4s both;
+    }
+
+    .button {
+        padding: 0.8rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .button.primary {
+        background: var(--text-main);
+        color: var(--bg-color);
+    }
+
+    .button.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 768px) {
+        nav { padding: 1.5rem 5%; }
+        #tool-hero h1 { font-size: 2rem; }
+        .upload-area { padding: 2rem 1.5rem; }
+        .preview-container, .source-container { padding: 1.5rem; border-radius: 16px; }
+        .md-rendered { font-size: 1rem; }
+        .md-rendered h2 { font-size: 1.3rem; }
+        .md-rendered h3 { font-size: 1.15rem; }
+    }
+</style>
+</Layout>

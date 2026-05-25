@@ -1,0 +1,477 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="时间戳转换 - XIE YIFAN" description="Unix 时间戳与日期互相转换">
+<div id="container">
+    <div class="spotlight"></div>
+
+    <nav>
+        <a href="/" class="logo"><img src="/favicon.jpeg" alt="Logo" class="logo-img" /></a>
+        <div class="nav-links">
+            <a href="/">首页</a>
+            <a href="/posts">文章</a>
+            <a href="/projects">项目</a>
+            <a href="/tools" class="active">工具</a>
+            <a href="/about">关于</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="back-link-wrapper">
+            <a href="/tools" class="back-link">← 返回工具列表</a>
+        </div>
+
+        <section id="tool-hero">
+            <h1>时间戳<span class="gradient-text">转换</span></h1>
+            <p class="subtitle">Unix 时间戳与日期时间互相转换</p>
+        </section>
+
+        <div class="tool-container">
+            <div class="current-time-card">
+                <span class="label">当前时间</span>
+                <div class="time-display" id="current-time"></div>
+                <div class="timestamp-display" id="current-timestamp"></div>
+            </div>
+
+            <div class="converter-section">
+                <h3>时间戳 → 日期时间</h3>
+                <div class="input-row">
+                    <input type="text" id="timestamp-input" placeholder="输入时间戳（秒或毫秒）" />
+                    <button class="convert-btn" onclick="timestampToDate()">转换</button>
+                </div>
+                <div class="result-display" id="date-result"></div>
+            </div>
+
+            <div class="converter-section">
+                <h3>日期时间 → 时间戳</h3>
+                <div class="input-row">
+                    <input type="text" id="date-input" placeholder="输入日期时间，如 2025-02-17 14:30:00" />
+                    <button class="convert-btn" onclick="dateToTimestamp()">转换</button>
+                </div>
+                <div class="result-display" id="timestamp-result"></div>
+            </div>
+        </div>
+
+        <footer class="page-footer">
+            <a href="/tools" class="button primary">返回工具列表</a>
+        </footer>
+    </main>
+</div>
+
+<script is:inline>
+function updateCurrentTime() {
+    const now = new Date();
+    const timeStr = now.toLocaleString('zh-CN', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    });
+    const ts = Math.floor(now.getTime() / 1000);
+
+    const timeEl = document.getElementById('current-time');
+    timeEl.textContent = timeStr;
+    timeEl.onclick = () => copyValue(timeEl, timeStr);
+    timeEl.classList.add('copyable');
+
+    const tsEl = document.getElementById('current-timestamp');
+    tsEl.textContent = ts;
+    tsEl.onclick = () => copyValue(tsEl, ts.toString());
+    tsEl.classList.add('copyable');
+}
+
+updateCurrentTime();
+setInterval(updateCurrentTime, 1000);
+
+function timestampToDate() {
+    const input = document.getElementById('timestamp-input').value.trim();
+    const result = document.getElementById('date-result');
+
+    if (!input) { result.textContent = ''; return; }
+
+    let ts = parseInt(input);
+    if (isNaN(ts)) { result.textContent = '请输入有效的时间戳'; return; }
+
+    if (input.length > 10) ts = ts;
+    else ts = ts * 1000;
+
+    const date = new Date(ts);
+    if (isNaN(date.getTime())) { result.textContent = '无效的时间戳'; return; }
+
+    const localTime = date.toLocaleString('zh-CN', { hour12: false });
+    const utcTime = date.toUTCString();
+    const isoTime = date.toISOString();
+
+    result.innerHTML = `
+        <div class="result-item">
+            <span class="result-label">本地时间：</span>
+            <span class="result-value copyable" onclick="copyValue(this, '${localTime}')">${localTime}</span>
+        </div>
+        <div class="result-item">
+            <span class="result-label">UTC 时间：</span>
+            <span class="result-value copyable" onclick="copyValue(this, '${utcTime}')">${utcTime}</span>
+        </div>
+        <div class="result-item">
+            <span class="result-label">ISO 格式：</span>
+            <span class="result-value copyable" onclick="copyValue(this, '${isoTime}')">${isoTime}</span>
+        </div>
+    `;
+}
+
+function dateToTimestamp() {
+    const input = document.getElementById('date-input').value.trim();
+    const result = document.getElementById('timestamp-result');
+
+    if (!input) { result.textContent = ''; return; }
+
+    const date = new Date(input);
+    if (isNaN(date.getTime())) { result.textContent = '无效的日期时间格式'; return; }
+
+    const seconds = Math.floor(date.getTime() / 1000);
+    const milliseconds = date.getTime();
+
+    result.innerHTML = `
+        <div class="result-item">
+            <span class="result-label">秒：</span>
+            <span class="result-value copyable" onclick="copyValue(this, '${seconds}')">${seconds}</span>
+        </div>
+        <div class="result-item">
+            <span class="result-label">毫秒：</span>
+            <span class="result-value copyable" onclick="copyValue(this, '${milliseconds}')">${milliseconds}</span>
+        </div>
+    `;
+}
+
+function copyValue(el, text) {
+    navigator.clipboard.writeText(text);
+    const original = el.textContent;
+    el.textContent = '✓ 已复制';
+    el.classList.add('copied');
+    setTimeout(() => {
+        el.textContent = original;
+        el.classList.remove('copied');
+    }, 1200);
+}
+</script>
+
+<style>
+    :root {
+        --accent: #7c3aed;
+        --accent-gradient: linear-gradient(45deg, #7c3aed, #ff1fb1);
+        --bg-color: #0a0a0a;
+        --text-main: #ffffff;
+        --text-muted: #a1a1aa;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        color: var(--text-main);
+        font-family: 'Inter', 'SF Pro Display', system-ui, sans-serif;
+        overflow-x: hidden;
+    }
+
+    #container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        z-index: 1;
+    }
+
+    .spotlight {
+        position: fixed;
+        top: -30%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 150vw;
+        height: 150vh;
+        background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.12) 0%, rgba(124, 58, 237, 0.03) 50%, rgba(0, 0, 0, 0) 80%);
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 2rem 10%;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .logo-img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .nav-links a {
+        color: var(--text-muted);
+        text-decoration: none;
+        margin-left: 2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+        color: var(--text-main);
+    }
+
+    main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem 1rem 4rem;
+        max-width: 800px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .back-link-wrapper {
+        width: 100%;
+        padding-bottom: 1.5rem;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .back-link {
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+        transition: color 0.3s;
+    }
+
+    .back-link:hover {
+        color: #a78bfa;
+    }
+
+    #tool-hero {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeInUp 0.8s ease-out 0.1s both;
+    }
+
+    #tool-hero h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+
+    .gradient-text {
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .subtitle {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+    }
+
+    .tool-container {
+        width: 100%;
+        animation: fadeInUp 0.8s ease-out 0.2s both;
+    }
+
+    .current-time-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .current-time-card .label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        display: block;
+        margin-bottom: 0.8rem;
+    }
+
+    .time-display {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    .timestamp-display {
+        font-size: 1.1rem;
+        color: var(--accent);
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    .time-display.copyable,
+    .timestamp-display.copyable {
+        cursor: pointer;
+        padding: 0.3rem 0.6rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+    .time-display.copyable:hover,
+    .timestamp-display.copyable:hover {
+        background: rgba(124, 58, 237, 0.15);
+    }
+
+    .time-display.copyable.copied,
+    .timestamp-display.copyable.copied {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .converter-section {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .converter-section h3 {
+        font-size: 1.1rem;
+        margin-bottom: 1.2rem;
+        color: var(--text-muted);
+    }
+
+    .input-row {
+        display: flex;
+        gap: 0.8rem;
+    }
+
+    .input-row input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 0.8rem 1rem;
+        color: var(--text-main);
+        font-size: 0.95rem;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    .input-row input:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+
+    .convert-btn {
+        padding: 0.8rem 1.5rem;
+        background: var(--accent);
+        border: none;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        white-space: nowrap;
+    }
+
+    .convert-btn:hover {
+        background: #6d28d9;
+        transform: translateY(-2px);
+    }
+
+    .result-display {
+        margin-top: 1.2rem;
+        padding: 1rem;
+        background: rgba(124, 58, 237, 0.08);
+        border-radius: 10px;
+        min-height: 3rem;
+    }
+
+    .result-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.4rem 0;
+        font-size: 0.95rem;
+    }
+
+    .result-label {
+        color: var(--text-muted);
+    }
+
+    .result-value {
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        flex: 1;
+        text-align: right;
+        margin-right: 0.5rem;
+    }
+
+    .result-value.copyable {
+        cursor: pointer;
+        padding: 0.3rem 0.6rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+        user-select: all;
+    }
+
+    .result-value.copyable:hover {
+        background: rgba(124, 58, 237, 0.15);
+        color: var(--accent);
+    }
+
+    .result-value.copyable.copied {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .page-footer {
+        margin-top: 4rem;
+        text-align: center;
+        animation: fadeInUp 0.8s ease-out 0.4s both;
+    }
+
+    .button {
+        padding: 0.8rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .button.primary {
+        background: var(--text-main);
+        color: var(--bg-color);
+    }
+
+    .button.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 768px) {
+        nav { padding: 1.5rem 5%; }
+        #tool-hero h1 { font-size: 2rem; }
+        .input-row { flex-direction: column; }
+        .time-display { font-size: 1.5rem; }
+    }
+</style>
+</Layout>

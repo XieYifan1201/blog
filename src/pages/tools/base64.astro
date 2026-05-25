@@ -1,0 +1,612 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Base64 编解码 - XIE YIFAN" description="Base64 编码与解码工具，支持文本和图片">
+<div id="container">
+    <div class="spotlight"></div>
+
+    <nav>
+        <a href="/" class="logo"><img src="/favicon.jpeg" alt="Logo" class="logo-img" /></a>
+        <div class="nav-links">
+            <a href="/">首页</a>
+            <a href="/posts">文章</a>
+            <a href="/projects">项目</a>
+            <a href="/tools" class="active">工具</a>
+            <a href="/about">关于</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="back-link-wrapper">
+            <a href="/tools" class="back-link">← 返回工具列表</a>
+        </div>
+
+        <section id="tool-hero">
+            <h1>Base64<span class="gradient-text">编解码</span></h1>
+            <p class="subtitle">支持文本和图片的 Base64 编码与解码</p>
+        </section>
+
+        <div class="tool-container">
+            <div class="mode-tabs">
+                <button class="mode-tab active" data-mode="text" onclick="switchMode('text')">文本模式</button>
+                <button class="mode-tab" data-mode="image" onclick="switchMode('image')">图片模式</button>
+            </div>
+
+            <div id="text-mode">
+                <div class="input-group">
+                    <label for="input-text">输入内容：</label>
+                    <textarea id="input-text" placeholder="输入要编码的文本，或粘贴 Base64 字符串..." rows="6"></textarea>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="encodeText()">编码 →</button>
+                    <button class="action-btn" onclick="decodeText()">← 解码</button>
+                    <button class="action-btn secondary" onclick="copyResult('text')">复制结果</button>
+                    <button class="action-btn secondary" onclick="clearText()">清空</button>
+                </div>
+
+                <div class="input-group">
+                    <label for="output-text">输出结果：</label>
+                    <textarea id="output-text" readonly placeholder="结果将显示在这里..." rows="6"></textarea>
+                </div>
+            </div>
+
+            <div id="image-mode" style="display: none;">
+                <div class="encode-section">
+                    <div class="upload-area" id="upload-area">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        <p>点击或拖拽图片到此处进行编码</p>
+                        <span class="upload-hint">支持常见图片格式</span>
+                        <input type="file" id="image-input" accept="image/*" hidden />
+                    </div>
+
+                    <div class="image-actions" id="image-actions" style="display: none;">
+                        <div class="image-preview-wrapper">
+                            <img id="image-preview" alt="预览" />
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="action-btn" onclick="encodeImage()">编码为 Base64</button>
+                            <button class="action-btn secondary" onclick="copyResult('image')">复制 Base64</button>
+                            <button class="action-btn secondary" onclick="clearImage()">清空</button>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="image-base64-output">Base64 结果：</label>
+                            <textarea id="image-base64-output" readonly placeholder="图片 Base64 将显示在这里..." rows="4"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="decode-section">
+                    <h3 class="section-title">Base64 解码图片</h3>
+                    <div class="input-group">
+                        <label for="decode-base64-input">粘贴 Base64 字符串：</label>
+                        <textarea id="decode-base64-input" placeholder="粘贴 data:image/... 或纯 Base64 字符串..." rows="4"></textarea>
+                    </div>
+                    <button class="action-btn decode-btn" onclick="decodeImage()">解码图片 →</button>
+                    <div class="decoded-image-wrapper" id="decoded-image-wrapper" style="display: none;">
+                        <img id="decoded-image" alt="解码结果" />
+                        <a id="download-decoded" class="download-btn" download="decoded-image.png">下载解码图片</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="page-footer">
+            <a href="/tools" class="button primary">返回工具列表</a>
+        </footer>
+    </main>
+</div>
+
+<script is:inline>
+let currentMode = 'text';
+let currentImageFile = null;
+
+function switchMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.mode === mode);
+    });
+    document.getElementById('text-mode').style.display = mode === 'text' ? 'block' : 'none';
+    document.getElementById('image-mode').style.display = mode === 'image' ? 'block' : 'none';
+}
+
+function encodeText() {
+    const input = document.getElementById('input-text').value;
+    try {
+        const encoded = btoa(unescape(encodeURIComponent(input)));
+        document.getElementById('output-text').value = encoded;
+    } catch (e) {
+        document.getElementById('output-text').value = '编码失败：' + e.message;
+    }
+}
+
+function decodeText() {
+    const input = document.getElementById('input-text').value.trim();
+    try {
+        const decoded = decodeURIComponent(escape(atob(input)));
+        document.getElementById('output-text').value = decoded;
+    } catch (e) {
+        document.getElementById('output-text').value = '解码失败：请检查输入是否为有效的 Base64 字符串';
+    }
+}
+
+function copyResult(type) {
+    let value = '';
+    if (type === 'text') value = document.getElementById('output-text').value;
+    else if (type === 'image') value = document.getElementById('image-base64-output').value;
+    if (value) {
+        navigator.clipboard.writeText(value);
+        const btn = event.target;
+        const original = btn.textContent;
+        btn.textContent = '已复制！';
+        setTimeout(() => btn.textContent = original, 1500);
+    }
+}
+
+function clearText() {
+    document.getElementById('input-text').value = '';
+    document.getElementById('output-text').value = '';
+}
+
+const uploadArea = document.getElementById('upload-area');
+const imageInput = document.getElementById('image-input');
+
+uploadArea.addEventListener('click', () => imageInput.click());
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('drag-over');
+});
+
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) handleImageFile(e.dataTransfer.files[0]);
+});
+
+imageInput.addEventListener('change', (e) => {
+    if (e.target.files.length) handleImageFile(e.target.files[0]);
+});
+
+function handleImageFile(file) {
+    if (!file.type.startsWith('image/')) return;
+    currentImageFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('image-preview').src = e.target.result;
+        document.getElementById('upload-area').style.display = 'none';
+        document.getElementById('image-actions').style.display = 'block';
+        document.getElementById('image-base64-output').value = '';
+    };
+    reader.readAsDataURL(file);
+}
+
+function encodeImage() {
+    if (!currentImageFile) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('image-base64-output').value = e.target.result;
+    };
+    reader.readAsDataURL(currentImageFile);
+}
+
+function decodeImage() {
+    let input = document.getElementById('decode-base64-input').value.trim();
+    if (!input) return;
+
+    if (!input.startsWith('data:image')) {
+        input = 'data:image/png;base64,' + input;
+    }
+
+    const wrapper = document.getElementById('decoded-image-wrapper');
+    const img = document.getElementById('decoded-image');
+    const downloadBtn = document.getElementById('download-decoded');
+
+    img.src = input;
+    img.onload = () => {
+        wrapper.style.display = 'block';
+        downloadBtn.href = input;
+    };
+    img.onerror = () => {
+        alert('解码失败，请检查 Base64 是否正确');
+    };
+}
+
+function clearImage() {
+    currentImageFile = null;
+    document.getElementById('image-preview').src = '';
+    document.getElementById('image-base64-output').value = '';
+    document.getElementById('decode-base64-input').value = '';
+    document.getElementById('decoded-image-wrapper').style.display = 'none';
+    document.getElementById('upload-area').style.display = 'block';
+    document.getElementById('image-actions').style.display = 'none';
+}
+</script>
+
+<style>
+    :root {
+        --accent: #7c3aed;
+        --accent-gradient: linear-gradient(45deg, #7c3aed, #ff1fb1);
+        --bg-color: #0a0a0a;
+        --text-main: #ffffff;
+        --text-muted: #a1a1aa;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        color: var(--text-main);
+        font-family: 'Inter', 'SF Pro Display', system-ui, sans-serif;
+        overflow-x: hidden;
+    }
+
+    #container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        z-index: 1;
+    }
+
+    .spotlight {
+        position: fixed;
+        top: -30%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 150vw;
+        height: 150vh;
+        background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.12) 0%, rgba(124, 58, 237, 0.03) 50%, rgba(0, 0, 0, 0) 80%);
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 2rem 10%;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .logo-img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .nav-links a {
+        color: var(--text-muted);
+        text-decoration: none;
+        margin-left: 2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+        color: var(--text-main);
+    }
+
+    main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem 1rem 4rem;
+        max-width: 800px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .back-link-wrapper {
+        width: 100%;
+        padding-bottom: 1.5rem;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .back-link {
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+        transition: color 0.3s;
+    }
+
+    .back-link:hover {
+        color: #a78bfa;
+    }
+
+    #tool-hero {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeInUp 0.8s ease-out 0.1s both;
+    }
+
+    #tool-hero h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+
+    .gradient-text {
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .subtitle {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+    }
+
+    .tool-container {
+        width: 100%;
+        animation: fadeInUp 0.8s ease-out 0.2s both;
+    }
+
+    .mode-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .mode-tab {
+        flex: 1;
+        padding: 0.7rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .mode-tab.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+    }
+
+    .input-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .input-group label {
+        display: block;
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        margin-bottom: 0.6rem;
+    }
+
+    .input-group textarea {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1rem;
+        color: var(--text-main);
+        font-size: 0.95rem;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        resize: vertical;
+        line-height: 1.6;
+    }
+
+    .input-group textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.8rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        flex: 1;
+        min-width: 100px;
+        padding: 0.8rem 1.2rem;
+        background: var(--accent);
+        border: none;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .action-btn:hover {
+        background: #6d28d9;
+        transform: translateY(-2px);
+    }
+
+    .action-btn.secondary {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .action-btn.secondary:hover {
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    .upload-area {
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px dashed rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 1.5rem;
+    }
+
+    .upload-area:hover,
+    .upload-area.drag-over {
+        border-color: var(--accent);
+        background: rgba(124, 58, 237, 0.05);
+    }
+
+    .upload-area svg {
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .upload-area p {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-hint {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .image-preview-wrapper {
+        margin-bottom: 1.5rem;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .image-preview-wrapper img {
+        width: 100%;
+        display: block;
+    }
+
+    .decode-section {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        margin-bottom: 1.2rem;
+        color: var(--text-muted);
+    }
+
+    .decode-section label {
+        display: block;
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        margin-bottom: 0.6rem;
+    }
+
+    .decode-section textarea {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1rem;
+        color: var(--text-main);
+        font-size: 0.95rem;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        resize: vertical;
+        line-height: 1.6;
+    }
+
+    .decode-section textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+
+    .decode-btn {
+        width: 100%;
+        margin-top: 0.8rem;
+    }
+
+    .decoded-image-wrapper {
+        margin-top: 1.5rem;
+        text-align: center;
+    }
+
+    .decoded-image-wrapper img {
+        max-width: 100%;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .download-btn {
+        display: inline-block;
+        padding: 0.8rem 2rem;
+        background: var(--accent);
+        border-radius: 10px;
+        color: #fff;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .download-btn:hover {
+        background: #6d28d9;
+        transform: translateY(-2px);
+    }
+
+    .page-footer {
+        margin-top: 4rem;
+        text-align: center;
+        animation: fadeInUp 0.8s ease-out 0.4s both;
+    }
+
+    .button {
+        padding: 0.8rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .button.primary {
+        background: var(--text-main);
+        color: var(--bg-color);
+    }
+
+    .button.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 768px) {
+        nav { padding: 1.5rem 5%; }
+        #tool-hero h1 { font-size: 2rem; }
+        .action-buttons { flex-direction: column; }
+        .action-btn { min-width: auto; }
+    }
+</style>
+</Layout>

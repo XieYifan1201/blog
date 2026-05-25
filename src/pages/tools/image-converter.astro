@@ -1,0 +1,544 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="图片格式转换 - XIE YIFAN" description="在线图片格式转换工具，支持多种图片格式">
+<div id="container">
+    <div class="spotlight"></div>
+
+    <nav>
+        <a href="/" class="logo"><img src="/favicon.jpeg" alt="Logo" class="logo-img" /></a>
+        <div class="nav-links">
+            <a href="/">首页</a>
+            <a href="/posts">文章</a>
+            <a href="/projects">项目</a>
+            <a href="/tools" class="active">工具</a>
+            <a href="/about">关于</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="back-link-wrapper">
+            <a href="/tools" class="back-link">← 返回工具列表</a>
+        </div>
+
+        <section id="tool-hero">
+            <h1>图片<span class="gradient-text">格式转换</span></h1>
+            <p class="subtitle">上传单张或多张图片，离线转换为其他格式</p>
+        </section>
+
+        <div class="tool-container">
+            <div class="upload-area" id="upload-area">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p>点击或拖拽图片到此处</p>
+                <span class="upload-hint">支持 PNG、JPG、WEBP、BMP、GIF、AVIF、ICO、TIFF、SVG，可多选</span>
+                <input type="file" id="file-input" accept="image/*" multiple hidden />
+            </div>
+
+            <div class="convert-options" id="convert-options" style="display: none;">
+                <div class="file-list" id="file-list"></div>
+
+                <div class="format-selector">
+                    <label for="target-format">目标格式：</label>
+                    <select id="target-format">
+                        <option value="image/png">PNG</option>
+                        <option value="image/jpeg">JPG</option>
+                        <option value="image/webp">WEBP</option>
+                        <option value="image/bmp">BMP</option>
+                        <option value="image/gif">GIF</option>
+                        <option value="image/avif">AVIF</option>
+                        <option value="image/x-icon">ICO</option>
+                        <option value="image/tiff">TIFF</option>
+                        <option value="image/svg+xml">SVG</option>
+                    </select>
+                </div>
+
+                <div class="quality-selector" id="quality-selector">
+                    <label for="quality">质量：<span id="quality-value">95%</span></label>
+                    <input type="range" id="quality" min="10" max="100" value="95" oninput="updateQuality()" />
+                </div>
+
+                <button class="convert-btn" id="convert-btn" onclick="convertImages()">转换并下载</button>
+            </div>
+        </div>
+
+        <footer class="page-footer">
+            <a href="/tools" class="button primary">返回工具列表</a>
+        </footer>
+    </main>
+</div>
+
+<script is:inline>
+let uploadedFiles = [];
+
+const uploadArea = document.getElementById('upload-area');
+const fileInput = document.getElementById('file-input');
+const convertOptions = document.getElementById('convert-options');
+const fileList = document.getElementById('file-list');
+
+uploadArea.addEventListener('click', () => fileInput.click());
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('drag-over');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('drag-over');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+    handleFiles(e.dataTransfer.files);
+});
+
+fileInput.addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+});
+
+function handleFiles(files) {
+    for (const file of files) {
+        if (file.type.startsWith('image/')) {
+            uploadedFiles.push(file);
+        }
+    }
+    updateFileList();
+}
+
+function updateFileList() {
+    if (uploadedFiles.length === 0) {
+        convertOptions.style.display = 'none';
+        return;
+    }
+
+    convertOptions.style.display = 'block';
+    fileList.innerHTML = uploadedFiles.map((file, i) => `
+        <div class="file-item">
+            <span class="file-name">${file.name}</span>
+            <span class="file-size">${formatSize(file.size)}</span>
+            <button class="remove-btn" onclick="removeFile(${i})">✕</button>
+        </div>
+    `).join('');
+}
+
+function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function removeFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateFileList();
+}
+
+function updateQuality() {
+    document.getElementById('quality-value').textContent = document.getElementById('quality').value + '%';
+}
+
+async function convertImages() {
+    const format = document.getElementById('target-format').value;
+    const quality = parseInt(document.getElementById('quality').value) / 100;
+    const ext = getExtension(format);
+
+    for (const file of uploadedFiles) {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        await new Promise((resolve) => { img.onload = resolve; });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+
+        if (format === 'image/jpeg' || format === 'image/bmp') {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        ctx.drawImage(img, 0, 0);
+
+        if (format === 'image/svg+xml') {
+            const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${img.width}" height="${img.height}">
+                <image href="${img.src}" width="${img.width}" height="${img.height}"/>
+            </svg>`;
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            downloadBlob(blob, file.name.replace(/\.[^.]+$/, '') + '.' + ext);
+        } else if (format === 'image/x-icon') {
+            canvas.width = Math.min(img.width, 256);
+            canvas.height = Math.min(img.height, 256);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+                downloadBlob(blob, file.name.replace(/\.[^.]+$/, '') + '.ico');
+            }, 'image/png', quality);
+        } else {
+            canvas.toBlob((blob) => {
+                downloadBlob(blob, file.name.replace(/\.[^.]+$/, '') + '.' + ext);
+            }, format, quality);
+        }
+
+        URL.revokeObjectURL(img.src);
+    }
+}
+
+function getExtension(format) {
+    const map = {
+        'image/png': 'png',
+        'image/jpeg': 'jpg',
+        'image/webp': 'webp',
+        'image/bmp': 'bmp',
+        'image/gif': 'gif',
+        'image/avif': 'avif',
+        'image/x-icon': 'ico',
+        'image/tiff': 'tiff',
+        'image/svg+xml': 'svg',
+    };
+    return map[format] || 'png';
+}
+
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+</script>
+
+<style>
+    :root {
+        --accent: #7c3aed;
+        --accent-gradient: linear-gradient(45deg, #7c3aed, #ff1fb1);
+        --bg-color: #0a0a0a;
+        --text-main: #ffffff;
+        --text-muted: #a1a1aa;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        color: var(--text-main);
+        font-family: 'Inter', 'SF Pro Display', system-ui, sans-serif;
+        overflow-x: hidden;
+    }
+
+    #container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        z-index: 1;
+    }
+
+    .spotlight {
+        position: fixed;
+        top: -30%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 150vw;
+        height: 150vh;
+        background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.12) 0%, rgba(124, 58, 237, 0.03) 50%, rgba(0, 0, 0, 0) 80%);
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 2rem 10%;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .logo-img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .nav-links a {
+        color: var(--text-muted);
+        text-decoration: none;
+        margin-left: 2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+        color: var(--text-main);
+    }
+
+    main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem 1rem 4rem;
+        max-width: 800px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .back-link-wrapper {
+        width: 100%;
+        padding-bottom: 1.5rem;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .back-link {
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+        transition: color 0.3s;
+    }
+
+    .back-link:hover {
+        color: #a78bfa;
+    }
+
+    #tool-hero {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeInUp 0.8s ease-out 0.1s both;
+    }
+
+    #tool-hero h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+
+    .gradient-text {
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .subtitle {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+    }
+
+    .tool-container {
+        width: 100%;
+        animation: fadeInUp 0.8s ease-out 0.2s both;
+    }
+
+    .upload-area {
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px dashed rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .upload-area:hover,
+    .upload-area.drag-over {
+        border-color: var(--accent);
+        background: rgba(124, 58, 237, 0.05);
+    }
+
+    .upload-area svg {
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .upload-area p {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-hint {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .convert-options {
+        margin-top: 2rem;
+    }
+
+    .file-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .file-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 1rem 1.2rem;
+    }
+
+    .file-name {
+        flex: 1;
+        font-size: 0.95rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .file-size {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .remove-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 0.2rem;
+        transition: color 0.2s;
+    }
+
+    .remove-btn:hover {
+        color: #ff4d4d;
+    }
+
+    .format-selector {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .format-selector label {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+    }
+
+    .format-selector select {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        color: var(--text-main);
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+
+    .format-selector select:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+
+    .quality-selector {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .quality-selector label {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        min-width: 100px;
+    }
+
+    .quality-selector input[type="range"] {
+        flex: 1;
+        height: 6px;
+        -webkit-appearance: none;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        outline: none;
+    }
+
+    .quality-selector input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        background: var(--accent);
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .convert-btn {
+        width: 100%;
+        padding: 1rem;
+        background: var(--accent);
+        border: none;
+        border-radius: 12px;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .convert-btn:hover {
+        background: #6d28d9;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+    }
+
+    .page-footer {
+        margin-top: 4rem;
+        text-align: center;
+        animation: fadeInUp 0.8s ease-out 0.4s both;
+    }
+
+    .button {
+        padding: 0.8rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .button.primary {
+        background: var(--text-main);
+        color: var(--bg-color);
+    }
+
+    .button.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 768px) {
+        nav { padding: 1.5rem 5%; }
+        #tool-hero h1 { font-size: 2rem; }
+        .upload-area { padding: 2rem 1.5rem; }
+    }
+</style>
+</Layout>
