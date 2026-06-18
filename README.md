@@ -17,7 +17,7 @@
 /
 ├── public/
 │   ├── certificates/       # 证书图片
-│   └── favicon.jpeg        # 站点图标
+│   └── favicon.webp        # 站点图标
 ├── src/
 │   ├── content/
 │   │   └── blog/           # 博客文章（Markdown）
