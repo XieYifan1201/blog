@@ -4,7 +4,7 @@ import Nav from '../../components/Nav.astro';
 import '../../styles/markdown.css';
 ---
 
-<Layout title="Markdown 阅读器 - OneSail Tech" description="上传并预览 Markdown 文档">
+<Layout title="Markdown 阅读器 - XIE YIFAN" description="上传并预览 Markdown 文档">
     <Nav active="工具" />
 
     <main>
@@ -257,10 +257,10 @@ function escapeHtml(text) {
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 2rem 8vw 4rem;
-        max-width: 900px;
+        padding: 2rem 0 4rem;
+        max-width: var(--site-narrow-width);
         margin: 0 auto;
-        width: 100%;
+        width: calc(100% - var(--site-page-gutter-total));
     }
 
     .back-link-wrapper {
@@ -314,12 +314,14 @@ function escapeHtml(text) {
         text-align: center;
         cursor: pointer;
         transition: all 0.3s;
+        box-shadow: var(--shadow-card);
     }
 
     .upload-area:hover,
     .upload-area.drag-over {
         border-color: #2563eb;
         background: #f0f4ff;
+        box-shadow: var(--shadow-card-hover);
     }
 
     .upload-area svg {
@@ -354,12 +356,14 @@ function escapeHtml(text) {
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s;
+        box-shadow: var(--shadow-button-neutral);
     }
 
     .toggle-btn.active {
         background: #2563eb;
         border-color: #2563eb;
         color: #fff;
+        box-shadow: var(--shadow-button);
     }
 
     .preview-container {
@@ -367,6 +371,7 @@ function escapeHtml(text) {
         border: 1px solid #eee;
         border-radius: 16px;
         padding: 3rem;
+        box-shadow: var(--shadow-card);
     }
 
     .md-rendered {
@@ -379,6 +384,7 @@ function escapeHtml(text) {
         border: 1px solid #eee;
         border-radius: 16px;
         padding: 3rem;
+        box-shadow: var(--shadow-card);
     }
 
     #source-text {
@@ -407,7 +413,7 @@ function escapeHtml(text) {
     }
 
     @media (max-width: 900px) {
-        main { padding: 1.5rem 5vw 3rem; }
+        main { padding: 1.5rem 0 3rem; }
         #tool-hero h1 { font-size: 2rem; }
         .upload-area { padding: 2rem 1.5rem; }
         .preview-container, .source-container { padding: 1.5rem; border-radius: 16px; }

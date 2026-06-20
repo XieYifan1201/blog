@@ -3,7 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import Nav from '../../components/Nav.astro';
 ---
 
-<Layout title="Base64 编解码 - OneSail Tech" description="Base64 编码与解码工具，支持文本和图片">
+<Layout title="Base64 编解码 - XIE YIFAN" description="Base64 编码与解码工具，支持文本和图片">
     <Nav active="工具" />
 
     <main>
@@ -222,10 +222,10 @@ function clearImage() {
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 2rem 8vw 4rem;
-        max-width: 900px;
+        padding: 2rem 0 4rem;
+        max-width: var(--site-narrow-width);
         margin: 0 auto;
-        width: 100%;
+        width: calc(100% - var(--site-page-gutter-total));
     }
 
     .back-link-wrapper {
@@ -288,12 +288,14 @@ function clearImage() {
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s;
+        box-shadow: var(--shadow-button-neutral);
     }
 
     .mode-tab.active {
         background: #2563eb;
         border-color: #2563eb;
         color: #fff;
+        box-shadow: var(--shadow-button);
     }
 
     .input-group {
@@ -344,21 +346,25 @@ function clearImage() {
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s;
+        box-shadow: var(--shadow-button);
     }
 
     .action-btn:hover {
         background: #1d4ed8;
         transform: translateY(-2px);
+        box-shadow: var(--shadow-button-hover);
     }
 
     .action-btn.secondary {
         background: #f9fafb;
         border: 1px solid #e5e7eb;
         color: #333;
+        box-shadow: var(--shadow-button-neutral);
     }
 
     .action-btn.secondary:hover {
         background: #f3f4f6;
+        box-shadow: var(--shadow-card);
     }
 
     .upload-area {
@@ -370,12 +376,14 @@ function clearImage() {
         cursor: pointer;
         transition: all 0.3s;
         margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-card);
     }
 
     .upload-area:hover,
     .upload-area.drag-over {
         border-color: #2563eb;
         background: #f0f4ff;
+        box-shadow: var(--shadow-card-hover);
     }
 
     .upload-area svg {
@@ -399,6 +407,7 @@ function clearImage() {
         border-radius: 12px;
         overflow: hidden;
         border: 1px solid #eee;
+        box-shadow: var(--shadow-card);
     }
 
     .image-preview-wrapper img {
@@ -468,11 +477,13 @@ function clearImage() {
         font-weight: 600;
         text-decoration: none;
         transition: all 0.3s;
+        box-shadow: var(--shadow-button);
     }
 
     .download-btn:hover {
         background: #1d4ed8;
         transform: translateY(-2px);
+        box-shadow: var(--shadow-button-hover);
     }
 
     @keyframes fadeInUp {
@@ -487,7 +498,7 @@ function clearImage() {
     }
 
     @media (max-width: 900px) {
-        main { padding: 1.5rem 5vw 3rem; }
+        main { padding: 1.5rem 0 3rem; }
         #tool-hero h1 { font-size: 2rem; }
         .action-buttons { flex-direction: column; }
         .action-btn { min-width: auto; }

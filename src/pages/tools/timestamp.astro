@@ -3,7 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import Nav from '../../components/Nav.astro';
 ---
 
-<Layout title="时间戳转换 - OneSail Tech" description="Unix 时间戳与日期互相转换">
+<Layout title="时间戳转换 - XIE YIFAN" description="Unix 时间戳与日期互相转换">
     <Nav active="工具" />
 
     <main>
@@ -143,10 +143,10 @@ function copyValue(el, text) {
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 2rem 8vw 4rem;
-        max-width: 900px;
+        padding: 2rem 0 4rem;
+        max-width: var(--site-narrow-width);
         margin: 0 auto;
-        width: 100%;
+        width: calc(100% - var(--site-page-gutter-total));
     }
 
     .back-link-wrapper {
@@ -199,6 +199,7 @@ function copyValue(el, text) {
         padding: 2rem;
         text-align: center;
         margin-bottom: 2rem;
+        box-shadow: var(--shadow-card);
     }
 
     .current-time-card .label {
@@ -247,6 +248,7 @@ function copyValue(el, text) {
         border-radius: 16px;
         padding: 2rem;
         margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-card);
     }
 
     .converter-section h3 {
@@ -287,11 +289,13 @@ function copyValue(el, text) {
         cursor: pointer;
         transition: all 0.3s;
         white-space: nowrap;
+        box-shadow: var(--shadow-button);
     }
 
     .convert-btn:hover {
         background: #1d4ed8;
         transform: translateY(-2px);
+        box-shadow: var(--shadow-button-hover);
     }
 
     .result-display {
@@ -351,7 +355,7 @@ function copyValue(el, text) {
     }
 
     @media (max-width: 900px) {
-        main { padding: 1.5rem 5vw 3rem; }
+        main { padding: 1.5rem 0 3rem; }
         #tool-hero h1 { font-size: 2rem; }
         .input-row { flex-direction: column; }
         .time-display { font-size: 1.5rem; }

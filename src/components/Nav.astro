@@ -28,7 +28,10 @@ const links = [
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1.5rem 8vw;
+        padding: 1.5rem 0;
+        max-width: var(--site-content-width);
+        margin: 0 auto;
+        width: calc(100% - var(--site-page-gutter-total));
         position: relative;
         z-index: 10;
     }
@@ -66,7 +69,7 @@ const links = [
 
     @media (max-width: 900px) {
         nav {
-            padding: 1rem 5vw;
+            padding: 1rem 0;
         }
         .nav-links {
             gap: 1rem;

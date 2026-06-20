@@ -1,4 +1,4 @@
-# OneSail Tech
+# XIE YIFAN
 
 基于 Astro 构建的个人博客站点，深色主题，简洁优雅。
 

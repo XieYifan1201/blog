@@ -42,7 +42,7 @@ const tools = [
 ];
 ---
 
-<Layout title="工具 - OneSail Tech" description="实用的在线工具集合">
+<Layout title="工具 - XIE YIFAN" description="实用的在线工具集合">
     <Nav active="工具" />
 
     <main>
@@ -69,10 +69,10 @@ const tools = [
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 2rem 8vw 4rem;
-        max-width: 1100px;
+        padding: 2rem 0 4rem;
+        max-width: var(--site-content-width);
         margin: 0 auto;
-        width: 100%;
+        width: calc(100% - var(--site-page-gutter-total));
     }
 
     #tools-hero {
@@ -114,12 +114,13 @@ const tools = [
         display: flex;
         flex-direction: column;
         text-align: center;
+        box-shadow: var(--shadow-card);
     }
 
     .tool-card:hover {
         border-color: #2563eb;
         transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+        box-shadow: var(--shadow-card-hover);
     }
 
     .tool-icon {
@@ -165,7 +166,7 @@ const tools = [
     }
 
     @media (max-width: 900px) {
-        main { padding: 2rem 5vw 4rem; }
+        main { padding: 2rem 0 4rem; }
         h1 { font-size: 2rem; }
         .tools-grid { grid-template-columns: 1fr; }
     }

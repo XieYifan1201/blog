@@ -3,7 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import Nav from '../../components/Nav.astro';
 ---
 
-<Layout title="图片格式转换 - OneSail Tech" description="在线图片格式转换工具，支持多种图片格式">
+<Layout title="图片格式转换 - XIE YIFAN" description="在线图片格式转换工具，支持多种图片格式">
     <Nav active="工具" />
 
     <main>
@@ -201,10 +201,10 @@ function downloadBlob(blob, filename) {
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 2rem 8vw 4rem;
-        max-width: 900px;
+        padding: 2rem 0 4rem;
+        max-width: var(--site-narrow-width);
         margin: 0 auto;
-        width: 100%;
+        width: calc(100% - var(--site-page-gutter-total));
     }
 
     .back-link-wrapper {
@@ -258,12 +258,14 @@ function downloadBlob(blob, filename) {
         text-align: center;
         cursor: pointer;
         transition: all 0.3s;
+        box-shadow: var(--shadow-card);
     }
 
     .upload-area:hover,
     .upload-area.drag-over {
         border-color: #2563eb;
         background: #f0f4ff;
+        box-shadow: var(--shadow-card-hover);
     }
 
     .upload-area svg {
@@ -301,6 +303,7 @@ function downloadBlob(blob, filename) {
         border: 1px solid #eee;
         border-radius: 12px;
         padding: 1rem 1.2rem;
+        box-shadow: var(--shadow-card);
     }
 
     .file-name {
@@ -400,12 +403,13 @@ function downloadBlob(blob, filename) {
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s;
+        box-shadow: var(--shadow-button);
     }
 
     .convert-btn:hover {
         background: #1d4ed8;
         transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+        box-shadow: var(--shadow-button-hover);
     }
 
     @keyframes fadeInUp {
@@ -420,7 +424,7 @@ function downloadBlob(blob, filename) {
     }
 
     @media (max-width: 900px) {
-        main { padding: 1.5rem 5vw 3rem; }
+        main { padding: 1.5rem 0 3rem; }
         #tool-hero h1 { font-size: 2rem; }
         .upload-area { padding: 2rem 1.5rem; }
     }
